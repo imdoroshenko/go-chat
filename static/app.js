@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://192.168.1.132:3000")
+const socket = new WebSocket('ws://localhost:3000')
 socket.addEventListener('open', (e) => {
   console.log(e)
 })
@@ -8,11 +8,16 @@ const messageTpl = document.createElement('div')
 function main() {
   const form = document.querySelector('#form'),
         message = document.querySelector('#message'),
-        feed = document.querySelector('#feed')
+        feed = document.querySelector('#feed'),
+        channel = document.querySelector('#channel')
+
+  channel.addEventListener('change', (e) => {
+    changeChannel(feed, channel)
+  })
 
   form.addEventListener('submit', (e) => {
-    console.log('submit', message.value)
-    sendMessage(message)
+    console.log('submit', message.value, channel.value)
+    sendMessage(message, channel)
     e.preventDefault()
   })
 
@@ -22,16 +27,37 @@ function main() {
   })
 }
 
+function changeChannel(feed, channel) {
+  while(feed.firstChild){
+    feed.removeChild(feed.firstChild)
+  }
+  socket.send(JSON.stringify({
+    type:    'join',
+    channel: channel.value
+  }))
+}
+
 function renderMessage(container, data) {
   const messageNode = messageTpl.cloneNode(true),
         message = JSON.parse(data)
-  messageNode.appendChild(document.createTextNode(message.message))
-  container.appendChild(messageNode)
+  switch (message.type) {
+    case 'msg':
+      messageNode.appendChild(document.createTextNode(message.value))
+      container.appendChild(messageNode)
+      break
+    case 'join':
+      messageNode.appendChild(document.createTextNode("Channel changed to " + message.channel))
+      container.appendChild(messageNode)
+      break
+  }
+  container.scrollTop = container.scrollHeight
 }
 
-function sendMessage(message) {
+function sendMessage(message, channel) {
   socket.send(JSON.stringify({
-    message: message.value
+    type:    'msg',
+    channel: channel.value,
+    value:   message.value
   }))
   message.value = ''
 }

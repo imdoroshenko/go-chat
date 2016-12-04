@@ -10,8 +10,11 @@
 
 <div id="feed" style="white-space: pre; height:200px; with:400px; overflow: scroll; border:1px solid black;"></div>
 <form id="form">
-<input type="text" id="message" />
+  <input type="text" id="message" autocomplete="off"/>
+  <select id="channel">
+    <option value="default" selected>Default</option>
+    <option value="other">Other</option>
+  </select>
 </form>
-
 </body>
 </html>

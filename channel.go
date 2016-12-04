@@ -8,25 +8,27 @@ import (
 )
 
 type appChannel struct {
-	name string
-	forward chan message
-	join chan *client
-	leave chan *client
+	Name string
+	Forward chan *Message
+	Join chan *client
+	Leave chan *client
+	Stop chan int
 	clients map[*client]bool
 }
 
-
-func (c *appChannel) run() {
+func (c *appChannel) Run() {
 	for {
 		select {
-		case client := <-c.join:
+		case client := <-c.Join:
 			c.clients[client] = true
-			log.Printf("Client joined %s channel\n", c.name)
-		case client := <-c.leave:
+			log.Printf("Client joined %s channel\n", c.Name)
+		case client := <-c.Leave:
 			delete(c.clients, client)
-			close(client.send)
-			log.Printf("Client left %s channel\n", c.name)
-		case msg := <-c.forward:
+			//close(client.send)
+			log.Printf("Client left %s channel\n", c.Name)
+		case msg := <-c.Forward:
+			log.Println("Forwarding message")
+			log.Println(c.clients)
 			for client := range c.clients {
 				select {
 				case client.send <- msg:
@@ -35,45 +37,34 @@ func (c *appChannel) run() {
 					close(client.send)
 				}
 			}
+		//case <-c.Stop:
+		//	close(c.Join)
+		//	close(c.Leave)
+		//	close(c.Stop)
+		//	close(c.Forward)
+		//	return
 		}
+		//for client := range c.clients {
+		//	delete(c.clients, client)
+		//}
 	}
 }
 
-const (
-	socketBufferSize  = 1024
-	messageBufferSize = 256
-)
+const socketBufferSize  = 1024
 
 var upgrader = &websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 	ReadBufferSize:socketBufferSize,
 	WriteBufferSize: socketBufferSize}
 
-func (c *appChannel) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	conn, err := upgrader.Upgrade(w, req, nil)
-	if err != nil {
-		log.Fatal("ServeHTTP:", err)
-		return
-	}
-	client := &client{
-		conn: 	 conn,
-		send:    make(chan message, messageBufferSize),
-		channel: c,
-	}
-	c.join <- client
-	defer func() { c.leave <- client }()
-	go client.write()
-	client.read()
-}
-
-
 
 func newChannel(name string) *appChannel {
 	return &appChannel{
-		name: 	 name,
-		forward: make(chan message),
-		join:    make(chan *client),
-		leave:   make(chan *client),
+		Name: 	 name,
+		Forward: make(chan *Message),
+		Join:    make(chan *client),
+		Leave:   make(chan *client),
+		Stop:   make(chan int),
 		clients: make(map[*client]bool),
 	}
 }
