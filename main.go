@@ -19,7 +19,7 @@ func (m *mainCtrl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal("ServeHTTP:", err)
 	}
-	client := newClient(conn, cm.Channels["default"], mb.Incoming)
+	client := newClient(conn, cm.Channels[defaultChannel], mb.Incoming)
 	go client.Run()
 	cm.Channels[defaultChannel].Join <- client
 }
