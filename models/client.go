@@ -10,21 +10,21 @@ type Client struct {
 	id string
 	conn *websocket.Conn
 	Channel *Channel
-	Send chan *Message
-	incoming chan *Message
+	Send chan *Event
+	incoming chan *Event
 }
 
-const messageBufferSize = 256
+const eventBufferSize = 256
 
 func (c *Client) read() {
 	defer c.conn.Close()
 	defer func() { c.Channel.Leave <- c }()
 	for {
-		msg := new(Message)
-		if err := c.conn.ReadJSON(msg); err == nil {
-			log.Println(msg)
-			msg.Client = c
-			c.incoming<- msg
+		e := new(Event)
+		if err := c.conn.ReadJSON(e); err == nil {
+			log.Println(e)
+			e.Client = c
+			c.incoming<- e
 		} else if _, ok := err.(*json.SyntaxError); ok {
 			log.Println("Syntax err:", err)
 		} else {
@@ -36,8 +36,8 @@ func (c *Client) read() {
 
 func (c *Client) write() {
 	defer c.conn.Close()
-	for msg := range c.Send {
-		if err := c.conn.WriteJSON(msg); err != nil {
+	for e := range c.Send {
+		if err := c.conn.WriteJSON(e); err != nil {
 			log.Println("Socket write err:", err)
 			break
 		}
@@ -50,10 +50,10 @@ func (c *Client) Run() {
 }
 
 
-func NewClient(conn *websocket.Conn, ch *Channel, incomingChan chan *Message) *Client {
+func NewClient(conn *websocket.Conn, ch *Channel, incomingChan chan *Event) *Client {
 	return &Client{
 		conn: 	  conn,
-		Send:     make(chan *Message, messageBufferSize),
+		Send:     make(chan *Event, eventBufferSize),
 		Channel:  ch,
 		incoming: incomingChan,
 	}

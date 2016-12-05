@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type Message struct {
+type Event struct {
 	Client *Client `json:"-"`
 	Channel string `json:"channel"`
 	Type string `json:"type"`

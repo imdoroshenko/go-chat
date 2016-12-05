@@ -6,7 +6,7 @@ import (
 
 type Channel struct {
 	Name string
-	Forward chan *Message
+	Forward chan *Event
 	Join chan *Client
 	Leave chan *Client
 	Stop chan int
@@ -23,12 +23,12 @@ func (c *Channel) Run() {
 			delete(c.clients, client)
 			//close(client.send)
 			log.Printf("Client left %s channel\n", c.Name)
-		case msg := <-c.Forward:
-			log.Println("Forwarding message")
+		case e := <-c.Forward:
+			log.Println("Forwarding event")
 			log.Println(c.clients)
 			for client := range c.clients {
 				select {
-				case client.Send <- msg:
+				case client.Send <- e:
 				default:
 					delete(c.clients, client)
 					close(client.Send)
@@ -51,7 +51,7 @@ func (c *Channel) Run() {
 func NewChannel(name string) *Channel {
 	return &Channel{
 		Name: 	 name,
-		Forward: make(chan *Message),
+		Forward: make(chan *Event),
 		Join:    make(chan *Client),
 		Leave:   make(chan *Client),
 		Stop:   make(chan int),

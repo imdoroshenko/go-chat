@@ -1,4 +1,4 @@
-const socket = new WebSocket('ws://localhost:3000')
+const socket = new WebSocket('ws://172.25.10.78:3000')
 socket.addEventListener('open', (e) => {
   console.log(e)
 })
