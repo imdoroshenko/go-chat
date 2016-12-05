@@ -4,7 +4,7 @@
 
 ```go get github.com/imdoroshenko/go-chat```
 
-```cd $HOPATH/github.com/imdoroshenko/go-chat```
+```cd $GOPATH/github.com/imdoroshenko/go-chat```
 
 ```go run *.go```
 
