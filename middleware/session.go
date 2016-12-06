@@ -2,17 +2,23 @@ package middleware
 
 import (
 	"net/http"
-	_ "github.com/mediocregopher/radix.v2/pool"
-	"log"
+	"github.com/mediocregopher/radix.v2/pool"
+	"github.com/mediocregopher/radix.v2/redis"
 )
 
 
-func Session(str string) Adapter {
+func Session(pool pool.Pool) Adapter {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Println("before", str)
-			defer log.Println("after", str)
 			h.ServeHTTP(w, r)
 		})
 	}
+}
+
+func checkSession(redis redis.Client) {
+
+}
+
+func setSession(redis redis.Client) {
+
 }
