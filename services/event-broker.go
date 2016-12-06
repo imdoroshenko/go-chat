@@ -48,7 +48,7 @@ func (eb *EventBroker) Run() {
 
 const messageBufferSize = 256
 
-func NewMessageBroker() *EventBroker {
+func NewEventBroker() *EventBroker {
 	return &EventBroker{
 		Incoming: make(chan *models.Event, messageBufferSize),
 	}

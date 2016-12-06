@@ -8,40 +8,26 @@ import (
 	"github.com/imdoroshenko/go-chat/services"
 )
 
-const (
-	defaultChannel = "default"
-	socketBufferSize  = 1024
-)
+const socketBufferSize  = 1024
 
-var (
-	upgrader *websocket.Upgrader
-	cm *services.ChannelManager
-	eb *services.EventBroker
-)
+var upgrader = &websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+	ReadBufferSize: socketBufferSize,
+	WriteBufferSize: socketBufferSize}
 
-func init() {
-	upgrader = &websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool { return true },
-		ReadBufferSize: socketBufferSize,
-		WriteBufferSize: socketBufferSize}
+const defaultChannel = "default"
 
-	cm = services.NewChannelManager()
-	eb = services.NewMessageBroker()
-	eb.ChannelManager = cm
-	go eb.Run()
-	go cm.Run()
-	cm.Open<- defaultChannel
-	cm.Open<- "other"
+type Messenger struct {
+	Cm *services.ChannelManager
+	Eb *services.EventBroker
 }
-
-type Messenger struct {}
 
 func (m *Messenger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal("ServeHTTP:", err)
 	}
-	client := models.NewClient(conn,cm.Channels[defaultChannel], eb.Incoming)
+	client := models.NewClient(conn, m.Cm.Channels[defaultChannel], m.Eb.Incoming)
 	go client.Run()
-	cm.Channels[defaultChannel].Join <- client
+	m.Cm.Channels[defaultChannel].Join <- client
 }
