@@ -6,7 +6,7 @@
 
 ```cd $GOPATH/github.com/imdoroshenko/go-chat```
 
-```go run *.go```
+```go run main/*.go```
 
 Open through you local web server or directly:
 ```open static/index.html```

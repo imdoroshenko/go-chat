@@ -17,8 +17,12 @@ type Client struct {
 const eventBufferSize = 256
 
 func (c *Client) read() {
-	defer c.conn.Close()
-	defer func() { c.Channel.Leave <- c }()
+	defer func() {
+		c.Channel.Leave <- c
+		close(c.Send)
+		c.conn.Close()
+	}()
+
 	for {
 		e := new(Event)
 		if err := c.conn.ReadJSON(e); err == nil {

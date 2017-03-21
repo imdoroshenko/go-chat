@@ -14,14 +14,14 @@ type ChannelManager struct {
 func (cm *ChannelManager) Run() {
 	for {
 		select {
-		case name := <-cm.Open:
-			cm.Channels[name] = models.NewChannel(name)
-			go cm.Channels[name].Run()
-			log.Printf("%s channel is open\n", name)
-		case name := <-cm.Close:
-			cm.Channels[name].Stop <- 1
-			delete(cm.Channels, name)
-			log.Printf("%s channel is closed\n", name)
+			case name := <-cm.Open:
+				cm.Channels[name] = models.NewChannel(name)
+				go cm.Channels[name].Run()
+				log.Printf("%s channel is open\n", name)
+			case name := <-cm.Close:
+				cm.Channels[name].Stop <- 1
+				delete(cm.Channels, name)
+				log.Printf("%s channel is closed\n", name)
 		}
 	}
 }

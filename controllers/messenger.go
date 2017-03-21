@@ -25,8 +25,10 @@ type Messenger struct {
 func (m *Messenger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal("ServeHTTP:", err)
+		log.Println("ServeHTTP: ", err)
+		return
 	}
+	log.Println("New client connected")
 	client := models.NewClient(conn, m.Cm.Channels[defaultChannel], m.Eb.Incoming)
 	go client.Run()
 	m.Cm.Channels[defaultChannel].Join <- client

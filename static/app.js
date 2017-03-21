@@ -1,4 +1,4 @@
-const socket = new WebSocket('ws://172.25.10.78:3000')
+const socket = new WebSocket('ws://127.0.0.1:3000')
 socket.addEventListener('open', (e) => {
   console.log(e)
 })
@@ -32,21 +32,24 @@ function changeChannel(feed, channel) {
     feed.removeChild(feed.firstChild)
   }
   socket.send(JSON.stringify({
-    type:    'join',
-    channel: channel.value
+    resource: 'chn',
+    method: 'join',
+    channel: {
+      name: channel.value
+    }
   }))
 }
 
 function renderMessage(container, data) {
   const messageNode = messageTpl.cloneNode(true),
         message = JSON.parse(data)
-  switch (message.type) {
+  switch (message.resource) {
     case 'msg':
-      messageNode.appendChild(document.createTextNode(message.value))
+      messageNode.appendChild(document.createTextNode(message.message.value))
       container.appendChild(messageNode)
       break
-    case 'join':
-      messageNode.appendChild(document.createTextNode("Channel changed to " + message.channel))
+    case 'chn':
+      messageNode.appendChild(document.createTextNode("Channel changed to " + message.channel.name))
       container.appendChild(messageNode)
       break
   }
@@ -55,12 +58,39 @@ function renderMessage(container, data) {
 
 function sendMessage(message, channel) {
   socket.send(JSON.stringify({
-    type:    'msg',
-    channel: channel.value,
-    value:   message.value
+    resource: 'msg',
+    method: 'send',
+    message: {
+      channel: channel.value,
+      value: message.value
+    }
   }))
   message.value = ''
 }
 
+function Robot() {
+  this._inProgress = false
+}
 
+Robot.prototype.start = function() {
+
+  if (this._inProgress) {
+    return
+  }
+  this._inProgress = true
+
+  ;(function lambda(r){
+    if (r._inProgress) {
+      sendMessage({value: Math.random().toString(36).substring(7)}, {value:'default'})
+      window.setTimeout(lambda, 10, r)
+    }
+  })(this)
+}
+
+
+Robot.prototype.stop = function() {
+  this._inProgress = false
+}
+
+const robot = new Robot()
 
